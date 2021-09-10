@@ -1,0 +1,47 @@
+language: node_js
+node_js: stable
+
+notifications:
+  email:
+    recipients:
+      - h7ml@qq.com
+    on_success: change
+    on_failure: always
+
+branches:
+  only:
+    - main
+
+cache:
+  apt: true
+  directories:
+    - node_modules
+
+os: linux
+# https://docs.travis-ci.com/user/reference/overview/
+dist: xenial
+addons:
+  chrome: stable
+services:
+  - xvfb
+sudo: required
+
+# turn off the clone of submodules for change the SSH to HTTPS in .gitmodules to avoid the error
+git:
+  submodules: false
+
+before_install:
+  - 'export DISPLAY=:99.0'
+  - sleep 3 # give xvfb some time to start
+  - '/sbin/start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_99.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :99 -ac -screen 0 1280x1024x16'
+  - google-chrome-stable --headless --disable-gpu --remote-debugging-port=9222 http://localhost &
+
+install:
+  - npm set progress=false
+  - npm install
+
+script:
+  - npm run karma:test
+
+after_script:
+  - npm run codecov
